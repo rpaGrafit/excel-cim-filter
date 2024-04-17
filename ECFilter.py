@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 import os
 import requests
+from packaging.version import parse
 
 # Version of the script
 __version__ = '1.0'
@@ -11,21 +12,27 @@ __version__ = '1.0'
 # Create Tkinter root window for file selection and update functionality
 root = tk.Tk()
 root.title("EC Filter")
+root.geometry('400x90')  # Set the window size
 
 # Function to check for updates
 def check_for_update():
-    # URL to your version file on GitHub, update it with your actual URL
-    version_url = 'https://raw.githubusercontent.com/rpaGraft/excel-cim-filter/main/version.txt'
+    # URL to the raw version.txt file on GitHub
+    version_url = 'https://raw.githubusercontent.com/rpaGrafit/excel-cim-filter/main/version.txt'
+
     try:
         response = requests.get(version_url)
-        latest_version = response.text.strip()  # Ensure your version file contains only the version number
-        if latest_version > __version__:
-            messagebox.showinfo("Update Available", f"A newer version {latest_version} is available.")
-            # Add further code to handle the download and update process
+        if response.status_code == 200:
+            latest_version = response.text.strip()
+            if parse(latest_version) > parse(__version__):
+                messagebox.showinfo("Update Available", f"A newer version {latest_version} is available.")
+                # Here you can add code to download and update the script or direct the user to the download page
+            else:
+                messagebox.showinfo("No Update Required", "You are using the latest version.")
         else:
-            messagebox.showinfo("No Update Required", "You are using the latest version.")
-    except requests.exceptions.RequestException:
-        messagebox.showerror("Update Error", "Failed to connect to the update server. Check your internet connection.")
+            messagebox.showerror("Update Error", f"Could not retrieve the latest version. The server returned status code: {response.status_code}")
+
+    except requests.exceptions.RequestException as e:
+        messagebox.showerror("Update Error", f"An error occurred while checking for updates: {e}")
 
 # Function to process Excel files
 def process_files():
@@ -66,8 +73,11 @@ def process_files():
 file_button = tk.Button(root, text="Process Excel Files", command=process_files)
 update_button = tk.Button(root, text="Update to Latest Version", command=check_for_update)
 
-file_button.pack(pady=10)
-update_button.pack(pady=10)
+file_button.pack(side=tk.TOP, pady=10)
+update_button.pack(side=tk.BOTTOM, pady=10)  # This will pack the button at the bottom
+
+# Configure the update button size and padding
+update_button.config(width=20, pady=5)
 
 # Start the GUI event loop
 root.mainloop()
