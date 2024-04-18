@@ -8,10 +8,11 @@ import shutil
 import tempfile
 from subprocess import Popen
 import sys
+from tkinter import PhotoImage
 from packaging.version import parse
 
 # Version of the script
-__version__ = '1.1'
+__version__ = '1.2'
 
 # Create Tkinter root window for file selection and update functionality
 root = tk.Tk()
@@ -102,8 +103,12 @@ def process_files():
 file_button = tk.Button(root, text="Process Excel Files", command=process_files)
 update_button = tk.Button(root, text="Update to Latest Version", command=check_for_update)
 
-file_button.pack(side=tk.TOP, pady=10)
-update_button.pack(side=tk.BOTTOM, pady=10)  # This will pack the button at the bottom
+# Create a label that looks like a button with text
+powered_by_label = tk.Label(root, text="Powered by RPA Grafit", bd=1, relief="solid", padx=1, pady=1)
+powered_by_label.pack(side=tk.BOTTOM, pady=1)
+
+file_button.pack(side=tk.TOP, pady=1)
+update_button.pack(side=tk.BOTTOM, pady=1)  # This will pack the button at the bottom
 
 # Configure the update button size and padding
 update_button.config(width=20, pady=5)
