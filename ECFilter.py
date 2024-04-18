@@ -4,15 +4,45 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 import os
 import requests
+import shutil
+import tempfile
+from subprocess import Popen
+import sys
 from packaging.version import parse
 
 # Version of the script
-__version__ = '1.0'
+__version__ = '1.1'
 
 # Create Tkinter root window for file selection and update functionality
 root = tk.Tk()
 root.title("EC Filter")
 root.geometry('400x90')  # Set the window size
+
+def perform_update():
+    # URL to the latest version of the script file on GitHub
+    script_url = 'https://raw.githubusercontent.com/rpaGrafit/excel-cim-filter/main/ECFilter.py'
+
+    try:
+        # Download the new script to a temporary file
+        response = requests.get(script_url)
+        response.raise_for_status()  # Ensure we got a successful response
+
+        # Create a temporary file to hold the new script
+        fd, temp_file_path = tempfile.mkstemp()
+        with os.fdopen(fd, 'wb') as temp_file:
+            temp_file.write(response.content)
+
+        # Replace the current script with the downloaded one
+        current_script_path = os.path.abspath(sys.argv[0])
+        shutil.move(temp_file_path, current_script_path)
+
+        # Now restart the script
+        python = sys.executable
+        os.execl(python, python, *sys.argv)
+        
+    except Exception as e:
+        messagebox.showerror("Update Failed", f"Failed to download the latest version of the script: {e}")
+
 
 # Function to check for updates
 def check_for_update():
@@ -21,16 +51,15 @@ def check_for_update():
 
     try:
         response = requests.get(version_url)
-        if response.status_code == 200:
-            latest_version = response.text.strip()
-            if parse(latest_version) > parse(__version__):
-                messagebox.showinfo("Update Available", f"A newer version {latest_version} is available.")
-                # Here you can add code to download and update the script or direct the user to the download page
-            else:
-                messagebox.showinfo("No Update Required", "You are using the latest version.")
-        else:
-            messagebox.showerror("Update Error", f"Could not retrieve the latest version. The server returned status code: {response.status_code}")
+        response.raise_for_status()  # Ensure we got a successful response
 
+        latest_version = response.text.strip()
+        if parse(latest_version) > parse(__version__):
+            response = messagebox.askyesno("Update Available", f"A newer version {latest_version} is available. Do you want to update now?")
+            if response:
+                perform_update()
+        else:
+            messagebox.showinfo("No Update Required", "You are using the latest version.")
     except requests.exceptions.RequestException as e:
         messagebox.showerror("Update Error", f"An error occurred while checking for updates: {e}")
 
